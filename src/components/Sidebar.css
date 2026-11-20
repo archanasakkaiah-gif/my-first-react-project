@@ -1,0 +1,81 @@
+/* src/components/Sidebar.css */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #215ba8, #7c3aed);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+}
+.sidebar-header {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+.sidebar-header .logo {
+  width: 70px;
+  margin-bottom: 0.5rem;
+}
+.sidebar-header h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+.sidebar-header p {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+.menu {
+  flex: 1;
+  padding: 0 0.5rem;
+}
+.menu-item {
+  margin-bottom: 0.3rem;
+}
+.menu-item a {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 0.4rem;
+  transition: background 0.2s;
+}
+.menu-item a:hover,
+.menu-item a.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+.menu-item .icon {
+  margin-right: 0.8rem;
+}
+.menu-item .arrow {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+.submenu {
+  padding-left: 2rem;
+  margin-top: 0.3rem;
+}
+.submenu-link {
+  display: block;
+  padding: 0.4rem 0;
+  color: #e0e0e0;
+  text-decoration: none;
+}
+.submenu-link:hover {
+  color: #fff;
+}
+.sidebar-footer {
+  text-align: center;
+  padding: 1rem;
+  opacity: 0.9;
+  font-size: 0.85rem;
+}
+.sidebar-footer .illustration {
+  width: 80px;
+  margin-top: 0.5rem;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+}
