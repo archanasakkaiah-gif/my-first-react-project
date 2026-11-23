@@ -1,72 +1,202 @@
-// src/components/Sidebar.jsx
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Users, Image, Phone, LogIn } from 'lucide-react';
+import { NavLink, Link, useLocation } from 'react-router-dom';
+import {
+  Home,
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  Image,
+  Info,
+  Phone,
+  LogIn,
+  ChevronDown,
+  ChevronRight,
+  Sparkles,
+  PlusCircle,
+  X,
+  Heart
+} from 'lucide-react';
+import { SchoolLogoSvg } from '../assets/illustrations';
+import { useSchool } from '../context/SchoolContext';
 import './Sidebar.css';
 
-const menuItems = [
-  { name: 'Dashboard', to: '/', icon: <Home size={18} /> },
-  { name: 'Home', to: '/home', icon: <Home size={18} /> },
-  { name: 'About Us', to: '/about', icon: <BookOpen size={18} /> },
-  {
-    name: 'Admissions',
-    to: '/admissions',
-    icon: <Users size={18} />,
-    submenu: [
-      { name: 'New Admission', to: '/admissions/new' },
-      { name: 'Admission List', to: '/admissions/list' },
-    ],
-  },
-  { name: 'Our Programs', to: '/programs', icon: <BookOpen size={18} /> },
-  { name: 'Gallery', to: '/gallery', icon: <Image size={18} /> },
-  { name: 'Contact', to: '/contact', icon: <Phone size={18} /> },
-  { name: 'Login', to: '/login', icon: <LogIn size={18} /> },
-];
-
 export default function Sidebar() {
-  const [openSub, setOpenSub] = useState(null);
-  const toggleSub = (name) => setOpenSub(openSub === name ? null : name);
+  const { mobileSidebarOpen, setMobileSidebarOpen, setAddStudentModalOpen, admissions } = useSchool();
+  const [admissionsMenuOpen, setAdmissionsMenuOpen] = useState(true);
+  const location = useLocation();
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 992) {
+      setMobileSidebarOpen(false);
+    }
+  };
+
+  const pendingCount = admissions.filter(a => a.status === 'Pending').length;
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <img src="logo.webp" alt="Little Champs" className="logo" />
-        <h2>Little Champs Kids School</h2>
-        <p>Play • Learn • Grow</p>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="mobile-backdrop d-lg-none"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
 
-      <nav className="menu">
-        {menuItems.map((item) => (
-          <div key={item.name} className="menu-item">
-            <NavLink
-              to={item.to}
-              className={({ isActive }) => (isActive ? 'active' : '')}
-              onClick={() => item.submenu && toggleSub(item.name)}
+      <aside className={`sidebar-container ${mobileSidebarOpen ? 'open' : ''}`}>
+        {/* Header with School Logo */}
+        <div className="sidebar-header">
+          <Link to="/" className="brand-wrapper" onClick={handleLinkClick}>
+            <SchoolLogoSvg size={44} />
+            <div className="brand-text">
+              <h2>Little Champs</h2>
+              <p>Play • Learn • Grow 🌟</p>
+            </div>
+          </Link>
+          <button
+            className="close-mobile-btn d-lg-none"
+            onClick={() => setMobileSidebarOpen(false)}
+            title="Close Menu"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="sidebar-nav">
+          <div className="nav-section-title">Explore School</div>
+
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><Home size={19} /></span>
+            <span>Home</span>
+          </NavLink>
+
+          <NavLink
+            to="/programs"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><BookOpen size={19} /></span>
+            <span>Programs & Age</span>
+            <span className="badge-pill-nav">5</span>
+          </NavLink>
+
+          <NavLink
+            to="/gallery"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><Image size={19} /></span>
+            <span>Kids Gallery</span>
+          </NavLink>
+
+          <NavLink
+            to="/about"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><Info size={19} /></span>
+            <span>About Us</span>
+          </NavLink>
+
+          <NavLink
+            to="/contact"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><Phone size={19} /></span>
+            <span>Contact & Tour</span>
+          </NavLink>
+
+          <div className="nav-section-title mt-2">School Management</div>
+
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><LayoutDashboard size={19} /></span>
+            <span>CRM Dashboard</span>
+            <span className="badge-pill-nav bg-warning text-dark fw-bold">Live</span>
+          </NavLink>
+
+          {/* Admissions Collapsible */}
+          <div>
+            <div
+              className={`nav-link-item ${location.pathname.startsWith('/admissions') ? 'active' : ''}`}
+              onClick={() => setAdmissionsMenuOpen(!admissionsMenuOpen)}
             >
-              <span className="icon">{item.icon}</span>
-              <span className="title">{item.name}</span>
-              {item.submenu && (
-                <span className="arrow">{openSub === item.name ? '▾' : '▸'}</span>
+              <span className="nav-icon"><Users size={19} /></span>
+              <span>Admissions</span>
+              {pendingCount > 0 && (
+                <span className="badge bg-danger text-white rounded-pill ms-auto me-1" style={{ fontSize: '0.68rem', padding: '2px 6px' }}>
+                  {pendingCount}
+                </span>
               )}
-            </NavLink>
+              <span className="ms-auto">
+                {admissionsMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+            </div>
 
-            {item.submenu && openSub === item.name && (
-              <div className="submenu">
-                {item.submenu.map((sub) => (
-                  <NavLink key={sub.name} to={sub.to} className="submenu-link">
-                    {sub.name}
-                  </NavLink>
-                ))}
+            {admissionsMenuOpen && (
+              <div className="submenu-container">
+                <NavLink
+                  to="/admissions"
+                  end
+                  className={({ isActive }) => `submenu-item ${isActive ? 'active' : ''}`}
+                  onClick={handleLinkClick}
+                >
+                  Overview & List
+                </NavLink>
+                <NavLink
+                  to="/admissions/new"
+                  className={({ isActive }) => `submenu-item ${isActive ? 'active' : ''}`}
+                  onClick={handleLinkClick}
+                >
+                  + New Admission Form
+                </NavLink>
               </div>
             )}
           </div>
-        ))}
-      </nav>
 
-      <div className="sidebar-footer">
-        <p>Dream Big Learn Big</p>
-        <img src="/illustration.svg" alt="Kids" className="illustration" />
-      </div>
-    </aside>
+          <NavLink
+            to="/login"
+            className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+            onClick={handleLinkClick}
+          >
+            <span className="nav-icon"><LogIn size={19} /></span>
+            <span>Parent / Staff Portal</span>
+          </NavLink>
+        </nav>
+
+        {/* Promo Quick Action */}
+        <div className="sidebar-promo-card">
+          <div className="d-flex justify-content-center mb-2 text-warning">
+            <Sparkles size={24} />
+          </div>
+          <h4>Admissions 2026-27</h4>
+          <p>Limited seats open for Toddlers & Nursery</p>
+          <button
+            className="btn btn-sm btn-warning w-100 fw-bold rounded-pill shadow-sm"
+            onClick={() => {
+              setAddStudentModalOpen(true);
+              handleLinkClick();
+            }}
+          >
+            <PlusCircle size={15} className="me-1" /> Quick Admission
+          </button>
+        </div>
+
+        {/* Footer info */}
+        <div className="p-3 text-center border-top border-white-10 text-white-50" style={{ fontSize: '0.74rem' }}>
+          Made with <Heart size={12} className="text-danger inline" /> for Little Champions
+        </div>
+      </aside>
+    </>
   );
 }
