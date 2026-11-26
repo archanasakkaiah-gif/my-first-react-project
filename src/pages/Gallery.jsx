@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Image as ImageIcon,
   PlusCircle,
@@ -6,14 +6,45 @@ import {
   Sparkles,
   Maximize2,
   X,
-  Heart
+  Heart,
+  Trash2
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
+import { getGalleryImages, deleteGalleryImage } from '../services/galleryService';
 
 export default function Gallery() {
-  const { gallery, setUploadPhotoModalOpen } = useSchool();
+  const { setUploadPhotoModalOpen } = useSchool();
+  const [gallery, setGallery] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
+
+  const fetchGallery = async () => {
+    try {
+      setLoading(true);
+      const data = await getGalleryImages();
+      setGallery(data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load gallery');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await deleteGalleryImage(id);
+      fetchGallery();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete image');
+    }
+  };
 
   const categories = ['All', 'Classroom Fun', 'Sports Day', 'Art & Craft', 'Science Fair', 'Annual Fest'];
 
@@ -64,17 +95,31 @@ export default function Gallery() {
       </div>
 
       {/* 3. Photo Grid */}
+      {loading && (
+        <div className="text-center py-5">
+          <div className="spinner-border text-purple" role="status"></div>
+          <p className="text-muted mt-2">Loading gallery...</p>
+        </div>
+      )}
+      {error && <div className="alert alert-danger rounded-4">{error}</div>}
+      {!loading && !error && filteredPhotos.length === 0 && (
+        <div className="alert alert-info rounded-4 text-center">No gallery images found.</div>
+      )}
       <div className="row g-4">
-        {filteredPhotos.map((photo) => (
-          <div key={photo.id} className="col-lg-4 col-md-6">
+        {filteredPhotos.map((photo) => {
+          const imgSrc = photo.imageUrl?.startsWith('/uploads')
+            ? `http://localhost:5000${photo.imageUrl}`
+            : photo.imageUrl;
+          return (
+          <div key={photo._id} className="col-lg-4 col-md-6">
             <div
               className="card-kid bg-white border shadow-sm h-100 overflow-hidden position-relative group cursor-pointer"
               style={{ cursor: 'pointer' }}
-              onClick={() => setLightboxPhoto(photo)}
+              onClick={() => setLightboxPhoto({ ...photo, image: imgSrc })}
             >
               <div style={{ height: '260px', overflow: 'hidden', position: 'relative' }}>
                 <img
-                  src={photo.image}
+                  src={imgSrc}
                   alt={photo.title}
                   className="w-100 h-100 object-fit-cover"
                   style={{ transition: 'transform 0.4s ease' }}
@@ -88,6 +133,13 @@ export default function Gallery() {
                   {photo.category}
                 </span>
                 <button
+                  className="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-3 p-2 shadow"
+                  title="Delete"
+                  onClick={(e) => handleDelete(e, photo._id)}
+                >
+                  <Trash2 size={14} />
+                </button>
+                <button
                   className="btn btn-sm btn-light rounded-circle position-absolute bottom-0 end-0 m-3 p-2 shadow"
                   title="Enlarge"
                 >
@@ -98,15 +150,18 @@ export default function Gallery() {
               <div className="p-3">
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <h5 className="fw-bold text-dark mb-0 fs-6">{photo.title}</h5>
-                  <small className="text-muted" style={{ fontSize: '0.75rem' }}>{photo.date}</small>
+                  <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                    {photo.createdAt ? new Date(photo.createdAt).toLocaleDateString() : ''}
+                  </small>
                 </div>
                 <p className="text-muted small font-body mb-0" style={{ lineHeight: '1.5' }}>
-                  {photo.caption}
+                  {photo.description}
                 </p>
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* 4. Lightbox Modal */}

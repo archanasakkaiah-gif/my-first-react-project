@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   UserPlus,
@@ -17,25 +17,68 @@ import {
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
 import { KidAvatar } from '../assets/illustrations';
+import {
+  getAdmissions,
+  createAdmission,
+  updateAdmissionStatus,
+  deleteAdmission,
+} from '../services/admissionService';
 
 export default function Admissions({ defaultTab = 'list' }) {
   const {
-    admissions,
-    addStudent,
-    deleteStudent,
-    updateStudentStatus,
     setSelectedStudent,
     setStudentModalOpen,
-    setStudentToDelete,
-    setDeleteModalOpen,
     searchQuery,
     setSearchQuery
   } = useSchool();
 
+  const [admissions, setAdmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [filterClass, setFilterClass] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const fetchAdmissions = async () => {
+    try {
+      setLoading(true);
+      const data = await getAdmissions({
+        search: searchQuery || undefined,
+        programClass: filterClass !== 'All' ? filterClass : undefined,
+        status: filterStatus !== 'All' ? filterStatus : undefined,
+      });
+      setAdmissions(data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load admissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmissions();
+  }, [searchQuery, filterClass, filterStatus]);
+
+  const updateStudentStatus = async (id, status) => {
+    try {
+      await updateAdmissionStatus(id, status);
+      fetchAdmissions();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update status');
+    }
+  };
+
+  const handleDeleteAdmission = async (id) => {
+    try {
+      await deleteAdmission(id);
+      setSuccessMessage('Admission record deleted successfully.');
+      setTimeout(() => setSuccessMessage(''), 4000);
+      fetchAdmissions();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete admission');
+    }
+  };
 
   // Form State
   const [formData, setFormData] = useState({

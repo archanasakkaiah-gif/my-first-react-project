@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
@@ -13,14 +13,68 @@ import {
   Shield,
   Coffee
 } from 'lucide-react';
-import { useSchool } from '../context/SchoolContext';
+import { getPrograms, createProgram } from '../services/programService';
 
 export default function Programs() {
-  const { programs } = useSchool();
-  const [selectedProgram, setSelectedProgram] = useState(programs[0]?.id || 'nursery');
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newProgram, setNewProgram] = useState({
+    programName: '',
+    ageGroup: '',
+    description: '',
+    duration: '',
+    fees: '',
+    status: 'Active',
+  });
+  const [selectedProgram, setSelectedProgram] = useState('');
   const navigate = useNavigate();
 
-  const activeProg = programs.find((p) => p.id === selectedProgram) || programs[0];
+  const fetchPrograms = async () => {
+    try {
+      setLoading(true);
+      const data = await getPrograms();
+      setPrograms(data);
+      if (data.length > 0 && !selectedProgram) {
+        setSelectedProgram(data[0]._id);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load programs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
+  const handleAddProgram = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    if (!newProgram.programName || !newProgram.ageGroup || !newProgram.description || !newProgram.duration || !newProgram.fees) {
+      setError('Please fill in all required program fields.');
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await createProgram(newProgram);
+      setSuccess('Program added successfully!');
+      setNewProgram({ programName: '', ageGroup: '', description: '', duration: '', fees: '', status: 'Active' });
+      setShowAddForm(false);
+      await fetchPrograms();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to add program');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const activeProg = programs.find((p) => p._id === selectedProgram) || programs[0];
 
   const dailySchedule = [
     { time: '08:30 AM', title: 'Welcome Circle & Morning Rhymes', desc: 'Warm greetings, attendance song, and energetic stretching to start the day.', icon: '☀️' },
@@ -43,7 +97,7 @@ export default function Programs() {
         <p className="lead text-muted font-body mb-4" style={{ maxWidth: '680px', margin: '0 auto', fontSize: '1.05rem' }}>
           Our early childhood curriculum seamlessly blends Montessori play-based inquiry with social-emotional development, ensuring your child learns through joyful discovery.
         </p>
-        <div className="d-flex justify-content-center gap-3">
+        <div className="d-flex justify-content-center gap-3 flex-wrap">
           <Link to="/admissions/new" className="btn-kid-primary">
             <span>Apply for Admission 2026-27</span>
             <ArrowRight size={17} />
@@ -51,79 +105,142 @@ export default function Programs() {
           <Link to="/contact" className="btn-kid-outline">
             Schedule a Trial Day
           </Link>
+          <button
+            type="button"
+            className="btn-kid-secondary"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? 'Close Add Form' : '+ Add Program'}
+          </button>
         </div>
       </section>
 
-      {/* 2. All 5 Program Cards */}
+      {showAddForm && (
+        <section className="bg-white rounded-4 p-4 shadow-sm border">
+          <h4 className="fw-bold text-dark mb-3">Add New Program</h4>
+          {success && <div className="alert alert-success rounded-3">{success}</div>}
+          {error && <div className="alert alert-danger rounded-3">{error}</div>}
+          <form onSubmit={handleAddProgram} className="row g-3">
+            <div className="col-md-4">
+              <label className="form-label small fw-bold">Program Name *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={newProgram.programName}
+                onChange={(e) => setNewProgram({ ...newProgram, programName: e.target.value })}
+                placeholder="e.g., Playgroup"
+                required
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label small fw-bold">Age Group *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={newProgram.ageGroup}
+                onChange={(e) => setNewProgram({ ...newProgram, ageGroup: e.target.value })}
+                placeholder="e.g., 1.5 - 2.5 Years"
+                required
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label small fw-bold">Duration *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={newProgram.duration}
+                onChange={(e) => setNewProgram({ ...newProgram, duration: e.target.value })}
+                placeholder="e.g., 3 Hours/Day"
+                required
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label small fw-bold">Fees *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={newProgram.fees}
+                onChange={(e) => setNewProgram({ ...newProgram, fees: e.target.value })}
+                placeholder="e.g., 25000"
+                required
+              />
+            </div>
+            <div className="col-md-4">
+              <label className="form-label small fw-bold">Status</label>
+              <select
+                className="form-select"
+                value={newProgram.status}
+                onChange={(e) => setNewProgram({ ...newProgram, status: e.target.value })}
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div className="col-md-12">
+              <label className="form-label small fw-bold">Description *</label>
+              <textarea
+                className="form-control"
+                rows="2"
+                value={newProgram.description}
+                onChange={(e) => setNewProgram({ ...newProgram, description: e.target.value })}
+                placeholder="Program description..."
+                required
+              />
+            </div>
+            <div className="col-12">
+              <button type="submit" className="btn-kid-primary" disabled={submitting}>
+                {submitting ? 'Saving...' : 'Save Program'}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* 2. All Program Cards */}
       <section>
+        {loading && (
+          <div className="text-center py-5">
+            <div className="spinner-border text-purple" role="status"></div>
+            <p className="text-muted mt-2">Loading programs...</p>
+          </div>
+        )}
+        {error && (
+          <div className="alert alert-danger rounded-4">{error}</div>
+        )}
+        {!loading && !error && programs.length === 0 && (
+          <div className="alert alert-info rounded-4 text-center">No programs found in database.</div>
+        )}
         <div className="row g-4">
           {programs.map((prog) => {
-            const seatsFilledPercent = Math.round((prog.enrolled / prog.totalSeats) * 100);
-
             return (
-              <div key={prog.id} className="col-lg-4 col-md-6">
+              <div key={prog._id} className="col-lg-4 col-md-6">
                 <div className="card-kid bg-white p-4 h-100 border d-flex flex-column justify-content-between shadow-sm">
                   <div>
                     <div className="d-flex justify-content-between align-items-start mb-3">
-                      <span className="fs-1">{prog.icon}</span>
+                      <span className="fs-1">🎓</span>
                       <span
-                        className="badge fw-bold px-3 py-2 rounded-pill"
-                        style={{ backgroundColor: prog.badgeBg, color: prog.color }}
+                        className="badge fw-bold px-3 py-2 rounded-pill bg-purple-soft text-purple"
                       >
-                        {prog.ageRange}
+                        {prog.ageGroup}
                       </span>
                     </div>
 
-                    <h4 className="fw-bold text-dark mb-1">{prog.name}</h4>
-                    <p className="text-muted small fw-semibold mb-3">{prog.tagline}</p>
+                    <h4 className="fw-bold text-dark mb-1">{prog.programName}</h4>
+                    <p className="text-muted small fw-semibold mb-3">Status: {prog.status}</p>
 
                     <p className="text-muted small font-body mb-3" style={{ lineHeight: '1.6' }}>
                       {prog.description}
                     </p>
 
-                    {/* Key highlights */}
-                    <div className="mb-3">
-                      <small className="text-muted fw-bold d-block mb-2">Curriculum Highlights:</small>
-                      <div className="d-flex flex-column gap-1">
-                        {prog.curriculum?.map((c, i) => (
-                          <div key={i} className="d-flex align-items-center gap-2 small text-dark">
-                            <CheckCircle size={14} className="text-success" />
-                            <span>{c}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Teacher & timing */}
                     <div className="p-3 bg-light rounded-3 mb-3 small">
                       <div className="d-flex justify-content-between mb-1">
-                        <span className="text-muted">Timing:</span>
-                        <strong className="text-dark">{prog.timing}</strong>
-                      </div>
-                      <div className="d-flex justify-content-between mb-1">
-                        <span className="text-muted">Lead Teacher:</span>
-                        <strong className="text-purple">{prog.leadTeacher}</strong>
+                        <span className="text-muted">Duration:</span>
+                        <strong className="text-dark">{prog.duration}</strong>
                       </div>
                       <div className="d-flex justify-content-between">
-                        <span className="text-muted">Tuition:</span>
-                        <strong className="text-success fw-bold">{prog.fee}</strong>
-                      </div>
-                    </div>
-
-                    {/* Seat capacity progress */}
-                    <div className="mb-3">
-                      <div className="d-flex justify-content-between text-muted small mb-1">
-                        <span>Admissions Filled:</span>
-                        <strong>{prog.enrolled} / {prog.totalSeats} seats</strong>
-                      </div>
-                      <div className="progress" style={{ height: '6px' }}>
-                        <div
-                          className="progress-bar"
-                          style={{
-                            width: `${seatsFilledPercent}%`,
-                            backgroundColor: prog.color
-                          }}
-                        ></div>
+                        <span className="text-muted">Tuition Fees:</span>
+                        <strong className="text-success fw-bold">{prog.fees}</strong>
                       </div>
                     </div>
                   </div>

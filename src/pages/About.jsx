@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Heart,
@@ -14,8 +14,26 @@ import {
   Calendar
 } from 'lucide-react';
 import { SchoolLogoSvg } from '../assets/illustrations';
+import { getAboutInfo } from '../services/aboutService';
 
 export default function About() {
+  const [aboutInfo, setAboutInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAbout = async () => {
+      try {
+        setLoading(true);
+        const data = await getAboutInfo();
+        setAboutInfo(data);
+      } catch {
+        // Fallback to default static display if not yet created in DB
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAbout();
+  }, []);
   const educators = [
     {
       name: 'Mrs. Sunita Sharma',

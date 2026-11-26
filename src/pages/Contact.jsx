@@ -13,11 +13,12 @@ import {
   CheckCircle,
   MessageSquare
 } from 'lucide-react';
-import { useSchool } from '../context/SchoolContext';
+import { createEnquiry, createTour } from '../services/contactService';
 
 export default function Contact() {
-  const { addEnquiry } = useSchool();
   const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [openFaq, setOpenFaq] = useState(0);
 
   const [formData, setFormData] = useState({
@@ -27,29 +28,57 @@ export default function Contact() {
     childName: '',
     programInterested: 'Nursery',
     subject: 'Campus Tour Booking',
+    preferredDate: '',
+    preferredTime: '',
     message: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.parentName.trim() || !formData.phone.trim()) {
-      alert('Please provide parent name and phone number');
+    setError('');
+    if (!formData.parentName.trim() || !formData.phone.trim() || !formData.email.trim()) {
+      setError('Please provide parent name, email, and phone number.');
       return;
     }
 
-    addEnquiry(formData);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 8000);
+    try {
+      setSubmitting(true);
+      if (formData.subject === 'Campus Tour Booking') {
+        await createTour({
+          parentName: formData.parentName,
+          phoneNumber: formData.phone,
+          email: formData.email,
+          preferredDate: formData.preferredDate || new Date().toISOString().split('T')[0],
+          preferredTime: formData.preferredTime || '10:00 AM',
+          message: formData.message || `Interested in ${formData.programInterested}`,
+        });
+      } else {
+        await createEnquiry({
+          parentName: formData.parentName,
+          phoneNumber: formData.phone,
+          email: formData.email,
+          message: formData.message || `${formData.subject} - ${formData.programInterested}`,
+        });
+      }
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 8000);
 
-    setFormData({
-      parentName: '',
-      email: '',
-      phone: '',
-      childName: '',
-      programInterested: 'Nursery',
-      subject: 'Campus Tour Booking',
-      message: ''
-    });
+      setFormData({
+        parentName: '',
+        email: '',
+        phone: '',
+        childName: '',
+        programInterested: 'Nursery',
+        subject: 'Campus Tour Booking',
+        preferredDate: '',
+        preferredTime: '',
+        message: ''
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const faqs = [
