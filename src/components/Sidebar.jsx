@@ -46,10 +46,10 @@ export default function Sidebar() {
       <aside className={`sidebar-container ${mobileSidebarOpen ? 'open' : ''}`}>
         {/* Header with School Logo */}
         <div className="sidebar-header">
-          <Link to="/" className="brand-wrapper" onClick={handleLinkClick}>
-            <SchoolLogoSvg size={44} />
+          <Link to ="/" className ="brand-wrapper" onClick={handleLinkClick}>
+          <SchoolLogoSvg size={44} />
             <div className="brand-text">
-              <h2>Little Champs</h2>
+              <h2>Little Champs<br></br>Kids School</h2>
               <p>Play • Learn • Grow 🌟</p>
             </div>
           </Link>
