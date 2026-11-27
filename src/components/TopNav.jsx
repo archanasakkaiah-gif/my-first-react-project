@@ -24,7 +24,8 @@ export default function TopNav() {
     searchQuery,
     setSearchQuery,
     currentUser,
-    setCurrentUser
+    setCurrentUser,
+    logout
   } = useSchool();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -240,8 +241,9 @@ export default function TopNav() {
                   <button
                     className="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center gap-2 text-danger"
                     onClick={() => {
-                      navigate('/login');
+                      logout();
                       setShowUserMenu(false);
+                      navigate('/login', { replace: true });
                     }}
                   >
                     <LogOut size={16} />

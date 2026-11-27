@@ -15,7 +15,7 @@ import { SchoolLogoSvg } from '../assets/illustrations';
 import { useSchool } from '../context/SchoolContext';
 
 export default function Login() {
-  const { setCurrentUser } = useSchool();
+  const { login } = useSchool();
   const navigate = useNavigate();
 
   const [roleTab, setRoleTab] = useState('staff'); // 'parent' or 'staff'
@@ -39,25 +39,31 @@ export default function Login() {
     e.preventDefault();
 
     if (roleTab === 'staff') {
-      setCurrentUser({
-        name: 'Mrs. Sunita Sharma',
-        role: 'Principal & Super Admin',
-        email: email,
-        avatar: '👩‍🏫',
-        schoolName: 'Little Champs Kids School',
-        academicYear: '2026-2027'
-      });
-      navigate('/dashboard');
+      login(
+        {
+          name: 'Mrs. Sunita Sharma',
+          role: 'Principal & Super Admin',
+          email: email,
+          avatar: '👩‍🏫',
+          schoolName: 'Little Champs Kids School',
+          academicYear: '2026-2027'
+        },
+        'staff-session-token'
+      );
+      navigate('/dashboard', { replace: true });
     } else {
-      setCurrentUser({
-        name: 'Rajesh & Meera Patel',
-        role: 'Parent of Aarav (Nursery)',
-        email: email,
-        avatar: '👨‍👩‍👦',
-        schoolName: 'Little Champs Kids School',
-        academicYear: '2026-2027'
-      });
-      navigate('/');
+      login(
+        {
+          name: 'Rajesh & Meera Patel',
+          role: 'Parent of Aarav (Nursery)',
+          email: email,
+          avatar: '👨‍👩‍👦',
+          schoolName: 'Little Champs Kids School',
+          academicYear: '2026-2027'
+        },
+        'parent-session-token'
+      );
+      navigate('/', { replace: true });
     }
   };
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useSchool } from './context/SchoolContext';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 import Footer from './components/Footer';
@@ -15,40 +16,64 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import './App.css';
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useSchool();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+function AppLayout() {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
+  if (isLoginPage) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <div className="app-layout">
+      {/* Responsive Left Navigation */}
+      <Sidebar />
+
+      {/* Main Content Area */}
+      <div className="main-content-wrapper">
+        <TopNav />
+
+        <main className="page-container">
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+            <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+            <Route path="/admissions" element={<ProtectedRoute><Admissions /></ProtectedRoute>} />
+            <Route path="/admissions/new" element={<ProtectedRoute><Admissions defaultTab="new" /></ProtectedRoute>} />
+            <Route path="/admissions/list" element={<ProtectedRoute><Admissions defaultTab="list" /></ProtectedRoute>} />
+            <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
+            <Route path="/contact" element={<ProtectedRoute><Contact /></ProtectedRoute>} />
+            <Route path="*" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
+
+      {/* Global Modals for Quick Add, Details & Gallery upload */}
+      <GlobalModals />
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-layout">
-        {/* Responsive Left Navigation */}
-        <Sidebar />
-
-        {/* Main Content Area */}
-        <div className="main-content-wrapper">
-          <TopNav />
-
-          <main className="page-container">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/programs" element={<Programs />} />
-              <Route path="/admissions" element={<Admissions />} />
-              <Route path="/admissions/new" element={<Admissions defaultTab="new" />} />
-              <Route path="/admissions/list" element={<Admissions defaultTab="list" />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-
-          <Footer />
-        </div>
-
-        {/* Global Modals for Quick Add, Details & Gallery upload */}
-        <GlobalModals />
-      </div>
+      <AppLayout />
     </BrowserRouter>
   );
 }

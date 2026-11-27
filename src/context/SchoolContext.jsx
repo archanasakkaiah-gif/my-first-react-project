@@ -7,15 +7,31 @@ export const SchoolProvider = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Active Admin Profile
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Mrs. Sunita Sharma',
-    role: 'Principal & Super Admin',
-    email: 'admin@littlechamps.edu',
-    avatar: '👩‍🏫',
-    schoolName: 'Little Champs Kids School',
-    academicYear: '2026-2027'
+  // Active Admin / Parent Profile & Auth Session
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('little_champs_user');
+      const savedToken = localStorage.getItem('little_champs_token');
+      return savedUser && savedToken ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
   });
+
+  const isAuthenticated = Boolean(currentUser && localStorage.getItem('little_champs_token'));
+
+  const login = (userData, authToken) => {
+    localStorage.setItem('little_champs_user', JSON.stringify(userData));
+    localStorage.setItem('little_champs_token', authToken);
+    setCurrentUser(userData);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('little_champs_user');
+    localStorage.removeItem('little_champs_token');
+    localStorage.removeItem('token');
+    setCurrentUser(null);
+  };
 
   // Dynamic Statistics
   const [stats, setStats] = useState({
@@ -593,6 +609,9 @@ export const SchoolProvider = ({ children }) => {
         setMobileSidebarOpen,
         currentUser,
         setCurrentUser,
+        isAuthenticated,
+        login,
+        logout,
         stats,
         setStats,
         admissions,
