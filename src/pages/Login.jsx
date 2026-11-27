@@ -13,57 +13,58 @@ import {
 } from 'lucide-react';
 import { SchoolLogoSvg } from '../assets/illustrations';
 import { useSchool } from '../context/SchoolContext';
+import api from '../services/api';
 
 export default function Login() {
   const { login } = useSchool();
   const navigate = useNavigate();
 
   const [roleTab, setRoleTab] = useState('staff'); // 'parent' or 'staff'
-  const [email, setEmail] = useState('admin@littlechamps.edu');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRoleTabChange = (role) => {
     setRoleTab(role);
-    if (role === 'staff') {
-      setEmail('admin@littlechamps.edu');
-      setPassword('admin123');
-    } else {
-      setEmail('parent.aarav@gmail.com');
-      setPassword('parent123');
-    }
+    setError('');
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
 
-    if (roleTab === 'staff') {
-      login(
-        {
-          name: 'Mrs. Sunita Sharma',
-          role: 'Principal & Super Admin',
-          email: email,
-          avatar: '👩‍🏫',
-          schoolName: 'Little Champs Kids School',
-          academicYear: '2026-2027'
-        },
-        'staff-session-token'
+    try {
+      const response = await api.post('/auth/login', {
+        email,
+        password,
+        role: roleTab
+      });
+
+      const { token, user } = response.data;
+      if (!token || !user) {
+        throw new Error('Invalid authentication response from server.');
+      }
+
+      login(user, token);
+
+      const userRole = (user.role || roleTab || '').toLowerCase();
+      if (userRole === 'staff' || userRole === 'admin' || userRole.includes('principal')) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          'Login failed. Please check your credentials and try again.'
       );
-      navigate('/dashboard', { replace: true });
-    } else {
-      login(
-        {
-          name: 'Rajesh & Meera Patel',
-          role: 'Parent of Aarav (Nursery)',
-          email: email,
-          avatar: '👨‍👩‍👦',
-          schoolName: 'Little Champs Kids School',
-          academicYear: '2026-2027'
-        },
-        'parent-session-token'
-      );
-      navigate('/', { replace: true });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,6 +101,11 @@ export default function Login() {
         </div>
 
         {/* Form */}
+        {error && (
+          <div className="alert alert-danger py-2 px-3 small rounded-3 mb-3" role="alert">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleLoginSubmit}>
           <div className="mb-3">
             <label className="form-label fw-semibold text-dark small">Email Address</label>
@@ -158,9 +164,13 @@ export default function Login() {
             </label>
           </div>
 
-          <button type="submit" className="btn-kid-primary w-100 justify-content-center py-2 mb-3">
+          <button type="submit" disabled={isSubmitting} className="btn-kid-primary w-100 justify-content-center py-2 mb-3">
             <LogIn size={18} />
-            <span>Sign In to {roleTab === 'staff' ? 'Admin Portal' : 'Parent Account'}</span>
+            <span>
+              {isSubmitting
+                ? 'Signing In...'
+                : `Sign In to ${roleTab === 'staff' ? 'Admin Portal' : 'Parent Account'}`}
+            </span>
           </button>
         </form>
 

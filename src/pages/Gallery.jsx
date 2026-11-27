@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
 import { getGalleryImages, deleteGalleryImage } from '../services/galleryService';
+import { BACKEND_ORIGIN } from '../services/api';
 
 export default function Gallery() {
   const { setUploadPhotoModalOpen } = useSchool();
@@ -108,7 +109,7 @@ export default function Gallery() {
       <div className="row g-4">
         {filteredPhotos.map((photo) => {
           const imgSrc = photo.imageUrl?.startsWith('/uploads')
-            ? `http://localhost:5000${photo.imageUrl}`
+            ? `${BACKEND_ORIGIN}${photo.imageUrl}`
             : photo.imageUrl;
           return (
           <div key={photo._id} className="col-lg-4 col-md-6">
