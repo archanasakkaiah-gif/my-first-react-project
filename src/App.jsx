@@ -17,10 +17,6 @@ import Dashboard from './pages/Dashboard';
 import './App.css';
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useSchool();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
   return children;
 }
 
@@ -47,7 +43,7 @@ function AppLayout() {
 
         <main className="page-container">
           <Routes>
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />

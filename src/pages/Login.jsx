@@ -50,13 +50,7 @@ export default function Login() {
       }
 
       login(user, token);
-
-      const userRole = (user.role || roleTab || '').toLowerCase();
-      if (userRole === 'staff' || userRole === 'admin' || userRole.includes('principal')) {
-        navigate('/dashboard', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.message ||
